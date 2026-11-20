@@ -1,0 +1,605 @@
+{
+  "id": "feimao-tools-demo",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 0,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Note",
+      "pos": [
+        40,
+        20
+      ],
+      "size": [
+        720,
+        120
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "说明",
+      "properties": {
+        "Node name for S&R": "Note"
+      },
+      "widgets_values": [
+        "肥猫 tools 演示。这些节点可以单独接到自己的工作流里。具体用法看 B 站肥猫AIGC 的视频。"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "feimao_tools_Image_Prompt",
+      "pos": [
+        40,
+        180
+      ],
+      "size": [
+        420,
+        500
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "localized_name": "宽度",
+          "name": "宽度",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "localized_name": "高度",
+          "name": "高度",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "localized_name": "提示词",
+          "name": "提示词",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "localized_name": "图片反推",
+          "name": "图片反推",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "localized_name": "image_0",
+          "name": "image_0",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 图片提示词",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Image_Prompt",
+        "tmp_prompt": "黄昏的海边，一个人站在礁石上看向远方。"
+      },
+      "widgets_values": [
+        "[]",
+        "黄昏的海边，一个人站在礁石上看向远方。",
+        "自动",
+        "H3 <Picture N>",
+        "[]",
+        "16:9",
+        1.0,
+        32,
+        false,
+        1
+      ]
+    },
+    {
+      "id": 3,
+      "type": "feimao_tools_Batch_Prompt",
+      "pos": [
+        520,
+        180
+      ],
+      "size": [
+        560,
+        560
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "localized_name": "输出提示词",
+          "name": "输出提示词",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "localized_name": "资产名",
+          "name": "资产名",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "localized_name": "编号",
+          "name": "编号",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "localized_name": "宽度",
+          "name": "宽度",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "localized_name": "高度",
+          "name": "高度",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 批量提示词",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Batch_Prompt"
+      },
+      "widgets_values": [
+        "[{\"name\": \"16-9-海边\", \"text\": \"黄昏的海边，一个人站在礁石上看向远方，电影感光线。\", \"aspect\": \"16:9 (Widescreen)\"}, {\"name\": \"3-4-窗边\", \"text\": \"室内窗边的人物肖像，柔和侧光，安静的房间。\", \"aspect\": \"3:4 (Portrait Standard)\"}, {\"name\": \"1-1-静物\", \"text\": \"木桌上的茶杯和一本书，午后的自然光。\", \"aspect\": \"1:1 (Square)\"}]",
+        0,
+        100,
+        "16:9 (Widescreen)",
+        1.0,
+        16
+      ]
+    },
+    {
+      "id": 4,
+      "type": "feimao_tools_Image_Reverse",
+      "pos": [
+        1140,
+        180
+      ],
+      "size": [
+        460,
+        640
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "qwen模型",
+          "name": "qwen模型",
+          "type": "QWENLLAMA",
+          "link": null
+        },
+        {
+          "localized_name": "图片",
+          "name": "图片",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "合成提示词",
+          "name": "合成提示词",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "反推结果",
+          "name": "反推结果",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 批量反推",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Image_Reverse"
+      },
+      "widgets_values": [
+        "用中文详细描述这张图的内容：人物、服装、动作、场景、光线和画面风格。只写这一张图，整段连成一段中文，不要分段，不要换行，不要编号，不要额外说明。",
+        "",
+        false
+      ]
+    },
+    {
+      "id": 5,
+      "type": "feimao_tools_Resolution",
+      "pos": [
+        40,
+        760
+      ],
+      "size": [
+        340,
+        230
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "localized_name": "宽度",
+          "name": "宽度",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "localized_name": "高度",
+          "name": "高度",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 生图尺寸",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Resolution"
+      },
+      "widgets_values": [
+        "16:9 (Widescreen)",
+        1.0,
+        16,
+        false,
+        1360,
+        768
+      ]
+    },
+    {
+      "id": 6,
+      "type": "feimao_tools_Model_Switch",
+      "pos": [
+        430,
+        760
+      ],
+      "size": [
+        300,
+        220
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "MOSS图像",
+          "name": "MOSS图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "千问图像",
+          "name": "千问图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "Krea2图像",
+          "name": "Krea2图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "Z-image图像",
+          "name": "Z-image图像",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "图像",
+          "name": "图像",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 使用模型",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Model_Switch"
+      },
+      "widgets_values": [
+        "MOSS"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "feimao_tools_Upscale_Switch",
+      "pos": [
+        780,
+        760
+      ],
+      "size": [
+        300,
+        180
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "VOSR2图像",
+          "name": "VOSR2图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "SeedVR2图像",
+          "name": "SeedVR2图像",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "图像",
+          "name": "图像",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 使用放大",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Upscale_Switch"
+      },
+      "widgets_values": [
+        "VOSR2"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "feimao_tools_Model_Compare",
+      "pos": [
+        1140,
+        900
+      ],
+      "size": [
+        380,
+        480
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "MOSS图像",
+          "name": "MOSS图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "千问图像",
+          "name": "千问图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "Krea2图像",
+          "name": "Krea2图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "Z-image图像",
+          "name": "Z-image图像",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "MiniMax图像",
+          "name": "MiniMax图像",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "图像",
+          "name": "图像",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "localized_name": "分文件名",
+          "name": "分文件名",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 模型对比",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Model_Compare"
+      },
+      "widgets_values": [
+        "横向",
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        "MOSS",
+        "千问",
+        "Krea2",
+        "Z-image",
+        "MiniMax"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "feimao_tools_Moss_Box",
+      "pos": [
+        1660,
+        180
+      ],
+      "size": [
+        860,
+        960
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "localized_name": "最终提示词",
+          "name": "最终提示词",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "localized_name": "宽度",
+          "name": "宽度",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "localized_name": "高度",
+          "name": "高度",
+          "type": "INT",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 画框",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Moss_Box"
+      },
+      "widgets_values": [
+        "一张竖版海报，人物在画面中部，标题留在上方。",
+        "[]",
+        1024,
+        1536,
+        "",
+        "2:3 (Portrait Photo)",
+        1.5
+      ]
+    },
+    {
+      "id": 10,
+      "type": "feimao_tools_Load_Image",
+      "pos": [
+        2580,
+        180
+      ],
+      "size": [
+        500,
+        580
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "localized_name": "输出图片",
+          "name": "输出图片",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "localized_name": "图片文件名",
+          "name": "图片文件名",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "localized_name": "编号",
+          "name": "编号",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "title": "feimao tools 批量加载图像",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Load_Image"
+      },
+      "widgets_values": [
+        "{}",
+        "[]",
+        0,
+        false
+      ]
+    },
+    {
+      "id": 11,
+      "type": "feimao_tools_Save_Image",
+      "pos": [
+        3140,
+        180
+      ],
+      "size": [
+        500,
+        640
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "images",
+          "name": "images",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "localized_name": "保存提示词",
+          "name": "保存提示词",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "保存文件名",
+          "name": "保存文件名",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "localized_name": "分文件名",
+          "name": "分文件名",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "title": "肥猫图片批量保存节点",
+      "properties": {
+        "Node name for S&R": "feimao_tools_Save_Image"
+      },
+      "widgets_values": [
+        "默认",
+        "默认",
+        false,
+        true,
+        "{}"
+      ]
+    }
+  ],
+  "links": [],
+  "groups": [
+    {
+      "id": 1,
+      "title": "肥猫 tools 演示",
+      "bounding": [
+        20,
+        -20,
+        3700,
+        1560
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9,
+      "offset": [
+        10,
+        20
+      ]
+    }
+  },
+  "version": 0.4
+}
