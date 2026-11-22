@@ -1,6 +1,6 @@
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { hideComfyWidget } from "./hide_widget.js";
+import { hideComfyWidget, useDomLayout } from "./hide_widget.js";
 
 const NODE_CLASS = "feimao_tools_Image_Reverse";
 const STYLE_ID = "tmp-rev-style-v3";
@@ -92,17 +92,24 @@ function sourcePromptNode(node) {
   return origin == null ? null : (node.graph || app.graph)?.getNodeById?.(origin) || null;
 }
 
-function sourcePromptText(node) {
+function sourceStyle(node) {
   const source = sourcePromptNode(node);
-  if (!source) return "";
-  const raw = source.__tmpPromptReady && source.__tmpEditor
-    ? editorToTokens(source.__tmpEditor)
-    : String(widget(source, "prompt_raw")?.value || "");
-  const choice = widget(source, "引用格式")?.value || "自动";
-  const sent = widget(source, "送出格式")?.value || "H3 <Picture N>";
+  const choice = source ? widget(source, "引用格式")?.value || "自动" : "自动";
+  const sent = source ? widget(source, "送出格式")?.value || "H3 <Picture N>" : "H3 <Picture N>";
   const style = choice && choice !== "自动" ? choice : sent;
-  const qwen = String(style).startsWith("千问");
-  return raw.replace(/\{\{img:(\d+)\}\}/g, (_, number) => (qwen ? `<image${number}>` : `<Picture ${number}>`));
+  const leadRaw = source ? Number(widget(source, "外部图片")?.value || 0) : 0;
+  const lead = Number.isFinite(leadRaw) ? Math.max(0, Math.min(20, Math.round(leadRaw))) : 0;
+  return { qwen: String(style).startsWith("千问"), lead };
+}
+
+function tagForSource(node, number) {
+  const style = sourceStyle(node);
+  const shown = Number(number) + style.lead;
+  return style.qwen ? `<image${shown}>` : `<Picture ${shown}>`;
+}
+
+function adaptRuleTags(node, text) {
+  return String(text).replace(/<image\s*(\d+)\s*>/gi, (_, number) => tagForSource(node, Number(number)));
 }
 
 const GRID_RULES = {
@@ -171,6 +178,10 @@ function sourceRaw(node) {
   return String(widget(source, "prompt_raw")?.value || "");
 }
 
+function sourcePromptText(node) {
+  return sourceRaw(node).replace(/\{\{img:(\d+)\}\}/g, (_, number) => tagForSource(node, Number(number)));
+}
+
 function referencedNumbers(raw) {
   const seen = [];
   const pattern = /\{\{img:(\d+)\}\}|<Picture\s+(\d+)\s*>|<image\s*(\d+)\s*>|@图片\s*(\d+)/gi;
@@ -183,13 +194,6 @@ function referencedNumbers(raw) {
   return seen;
 }
 
-function tagForSource(node, number) {
-  const source = sourcePromptNode(node);
-  const choice = widget(source, "引用格式")?.value || "自动";
-  const sent = widget(source, "送出格式")?.value || "H3 <Picture N>";
-  const style = choice && choice !== "自动" ? choice : sent;
-  return String(style).startsWith("千问") ? `<image${number}>` : `<Picture ${number}>`;
-}
 
 function captionMap(text) {
   const map = new Map();
@@ -213,9 +217,9 @@ function gridText(node, mode) {
     "这是每张图片的内容-",
     lines.join("\n\n"),
     "",
-    "请根据每张图片的内容扩写我原来的合成需求。人物和场景有几张、先后顺序、图片编号，都以我原文为准，不要改编号，不要增删我点过名的图。<image0> 是空白宫格模板，工作流已经接好，提示词里要写到它，不要把它算进我上传的图。只返回扩写好的提示词正文，不要解释，不要加标题。",
+    `请根据每张图片的内容扩写我原来的合成需求。人物和场景有几张、先后顺序、图片编号，都以我原文为准，不要改编号，不要增删我点过名的图。${tagForSource(node, 0)} 是空白宫格模板，工作流已经接好，提示词里要写到它，不要把它算进我上传的图。只返回扩写好的提示词正文，不要解释，不要加标题。`,
     "",
-    GRID_RULES[mode],
+    adaptRuleTags(node, GRID_RULES[mode]),
   ].join("\n");
 }
 
@@ -407,11 +411,12 @@ function buildUI(node) {
   const dom = node.addDOMWidget("tmp_rev_ui", "tmp_rev", root, {
     serialize: false,
     hideOnZoom: false,
-    getMinHeight: () => 508,
-    getMaxHeight: () => 508,
   });
-  if (dom) dom.computeLayoutSize = () => ({ minHeight: 508, maxHeight: 508, minWidth: 0 });
+  useDomLayout(dom, 508, 508);
   root.style.width = "100%";
+  root.style.height = "100%";
+  root.style.maxHeight = "100%";
+  root.style.overflow = "auto";
 }
 
 function onExecuted(event) {

@@ -1,6 +1,6 @@
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { hideComfyWidget } from "./hide_widget.js";
+import { hideComfyWidget, useDomLayout } from "./hide_widget.js";
 
 const NODE_CLASS = "feimao_tools_Batch_Prompt";
 const NAME_SEP = "----";
@@ -1078,11 +1078,11 @@ function buildUI(node) {
     render();
   };
 
-  node.addDOMWidget("te_man_pro_batch_ui", "te_man_pro_batch", root, {
+  const dom = node.addDOMWidget("te_man_pro_batch_ui", "te_man_pro_batch", root, {
     serialize: false,
     hideOnZoom: false,
-    getMinHeight: () => 280,
   });
+  useDomLayout(dom, 280);
   root.style.height = "100%";
   root.style.maxHeight = "100%";
   root.style.minHeight = "0";

@@ -95,12 +95,22 @@ _REF_RE = re.compile(
 )
 
 
-def render_prompt(text: str, fmt: str) -> str:
+def _lead(value) -> int:
+    """How many pictures are wired in front of this node's uploads. 0 keeps today's numbers."""
+    try:
+        lead = int(value)
+    except (TypeError, ValueError):
+        return 0
+    return min(20, max(0, lead))
+
+
+def render_prompt(text: str, fmt: str, lead: int = 0) -> str:
     """Write @ references in the tag format the target model reads."""
     style = str(fmt or FORMATS[1])
+    shift = _lead(lead)
 
     def repl(match: re.Match) -> str:
-        number = next(int(group) for group in match.groups() if group)
+        number = next(int(group) for group in match.groups() if group) + shift
         if style.startswith("千问"):
             return f"<image{number}>"
         return f"<Picture {number}>"
@@ -227,6 +237,7 @@ class feimao_tools_Image_Prompt:
                 "对齐倍数": ("INT", {"default": 32, "min": 1, "max": 128, "step": 1}),
                 "跟随参考图": ("BOOLEAN", {"default": False}),
                 "参考图": ("INT", {"default": 1, "min": 1, "max": SLOT_CEILING, "step": 1}),
+                "外部图片": ("INT", {"default": 0, "min": 0, "max": 20, "step": 1}),
             }
         }
 
@@ -241,20 +252,21 @@ class feimao_tools_Image_Prompt:
         "引用格式选自动时，接到 H3 送 <Picture N>，接到千问送 <imageN>。接到别的节点可以手动改成其中一种。"
         "宽高比、百万像素和对齐倍数会算出宽度和高度，可以接到别的节点。"
         "打开跟随参考图后，宽度和高度改用所选参考图的像素尺寸。默认第一张，也可以指定第几张。"
+        "外部图片是工作流里已经接在本节点前面的张数。默认 0。设为 1 时，提示词里的图片0送出成第 1 张，上传的第 1 张送出成第 2 张。"
         "右侧图片反推把全部已传图片收成一批，交给旁边的批量反推。"
     )
 
     @classmethod
-    def IS_CHANGED(cls, images_json, prompt_raw, 引用格式, 送出格式, linked_json, 宽高比="16:9", 百万像素=8.0, 对齐倍数=32, 跟随参考图=False, 参考图=1):
+    def IS_CHANGED(cls, images_json, prompt_raw, 引用格式, 送出格式, linked_json, 宽高比="16:9", 百万像素=8.0, 对齐倍数=32, 跟随参考图=False, 参考图=1, 外部图片=0):
         style = str(引用格式) if str(引用格式) not in ("", "自动") else str(送出格式 or "H3 <Picture N>")
         try:
             items = _items(images_json)
         except Exception:
             items = []
         width, height = output_size(宽高比, 百万像素, 对齐倍数, 跟随参考图, 参考图, items)
-        return f"{_stamp(images_json)}|{prompt_raw}|{style}|{linked_json}|{width}|{height}|{int(_enabled(跟随参考图))}|{_ref_index(参考图)}"
+        return f"{_stamp(images_json)}|{prompt_raw}|{style}|{linked_json}|{width}|{height}|{int(_enabled(跟随参考图))}|{_ref_index(参考图)}|{_lead(外部图片)}"
 
-    def run(self, images_json="[]", prompt_raw="", 引用格式="自动", 送出格式="H3 <Picture N>", linked_json="[]", 宽高比="16:9", 百万像素=8.0, 对齐倍数=32, 跟随参考图=False, 参考图=1):
+    def run(self, images_json="[]", prompt_raw="", 引用格式="自动", 送出格式="H3 <Picture N>", linked_json="[]", 宽高比="16:9", 百万像素=8.0, 对齐倍数=32, 跟随参考图=False, 参考图=1, 外部图片=0):
         items = _items(images_json)
         referenced = _referenced(prompt_raw)
         missing = [number for number in referenced if number > len(items)]
@@ -275,7 +287,7 @@ class feimao_tools_Image_Prompt:
             images.append(_load_rgb(path))
         style = str(引用格式) if str(引用格式) not in ("", "自动") else str(送出格式 or "H3 <Picture N>")
         width, height = output_size(宽高比, 百万像素, 对齐倍数, 跟随参考图, 参考图, items)
-        return (width, height, render_prompt(prompt_raw, style), _stack_uploads(items), *images)
+        return (width, height, render_prompt(prompt_raw, style, 外部图片), _stack_uploads(items), *images)
 
 
 NODE_CLASS_MAPPINGS = {

@@ -1,6 +1,6 @@
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { hideComfyWidget } from "./hide_widget.js";
+import { hideComfyWidget, useDomLayout } from "./hide_widget.js";
 
 const SAVE_CLASS = "feimao_tools_Save_Image";
 const LOAD_CLASS = "feimao_tools_Load_Image";
@@ -2281,14 +2281,16 @@ function buildUI(node, mode) {
   root.style.width = "100%";
   root.style.height = "100%";
   root.style.minHeight = "0";
+  root.style.maxHeight = "100%";
+  root.style.overflow = "hidden";
   root.style.flex = "1 1 auto";
-  // Let Comfy size the slot from the node body. A fixed pixel height leaves the
-  // panel sitting in a corner while the node background stays large.
+  // Min height keeps a usable panel. Max height takes the free space in the
+  // node, so the controls fill the body instead of sitting in a corner.
   const dom = node.addDOMWidget("te_man_pro_save_ui", "te_man_pro_save", root, {
     serialize: false,
     hideOnZoom: false,
-    getMinHeight: () => 300,
   });
+  useDomLayout(dom, 300);
   // addDOMWidget only stores this on options. Graph save reads widget.serialize.
   if (dom) {
     dom.serialize = false;

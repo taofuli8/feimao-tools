@@ -1,6 +1,6 @@
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { hideComfyWidget } from "./hide_widget.js";
+import { hideComfyWidget, useDomLayout } from "./hide_widget.js";
 
 const NODE_CLASS = "feimao_tools_Moss_Box";
 const MIN_BOX = 12;
@@ -726,15 +726,8 @@ function build(node) {
   const mossWidget = node.addDOMWidget("tmp_moss_ui", "tmp_moss", root, {
     serialize: false,
     hideOnZoom: false,
-    getMinHeight: () => 720,
   });
-  if (mossWidget) {
-    mossWidget.computeLayoutSize = () => ({
-      minHeight: 720,
-      maxHeight: Infinity,
-      minWidth: 0,
-    });
-  }
+  useDomLayout(mossWidget, 720);
 
   let noticeTimer = 0;
   function setNotice(text, kind = "ok") {

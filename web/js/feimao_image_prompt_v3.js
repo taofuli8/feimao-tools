@@ -1,15 +1,15 @@
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
-import { hideComfyWidget } from "./hide_widget.js";
+import { hideComfyWidget, useDomLayout } from "./hide_widget.js";
 
 const NODE_CLASS = "feimao_tools_Image_Prompt";
 const SLOT_CEILING = 100;
-const STYLE_ID = "tmp-ip-style-v21";
+const STYLE_ID = "tmp-ip-style-v22";
 const NODE_WIDTH = 400;
-const NODE_HEIGHT = 472;
-const UI_HEIGHT = 388;
+const NODE_HEIGHT = 520;
+const UI_HEIGHT = 436;
 const NODE_HEIGHT_MAX = 2400;
-// 472 fits the panel plus the first 6 output rows, including 图片反推.
+// 520 fits the panel plus the first 6 output rows, including 图片反推.
 const BASE_SLOTS = 6;
 const SLOT_ROW = 20;
 const WIDTH_SLOT = 0;
@@ -18,9 +18,9 @@ const PROMPT_SLOT = 2;
 const BATCH_SLOT = 3;
 const IMAGE_SLOT = 4;
 const ASPECTS = [["1:1", 1, 1], ["4:3", 4, 3], ["3:4", 3, 4], ["3:2", 3, 2], ["2:3", 2, 3], ["16:9", 16, 9], ["9:16", 9, 16], ["21:9", 21, 9]];
-const MULTIPLES = [8, 16, 32, 64];
+const MULTIPLES = [8, 16, 32, 64, 96];
 const FORMATS = ["自动", "H3 <Picture N>", "千问 <imageN>"];
-const HIDDEN = ["images_json", "prompt_raw", "引用格式", "送出格式", "linked_json", "宽高比", "百万像素", "对齐倍数", "跟随参考图", "参考图"];
+const HIDDEN = ["images_json", "prompt_raw", "引用格式", "送出格式", "linked_json", "宽高比", "百万像素", "对齐倍数", "跟随参考图", "参考图", "外部图片"];
 
 const QWEN_TYPES = new Set([
   "TextEncodeQwenImage21",
@@ -37,8 +37,8 @@ function ensureStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    .tmp-ip { width:100%; height:auto; min-height:0; box-sizing:border-box; padding:2px 0 2px; display:flex; flex-direction:column; gap:6px;
-      overflow:hidden; background:transparent; color:var(--input-text); }
+    .tmp-ip { width:100%; height:100%; min-height:0; max-height:100%; box-sizing:border-box; padding:2px 0 2px; display:flex; flex-direction:column; gap:6px;
+      overflow:auto; background:transparent; color:var(--input-text); }
     .tmp-ip-bar { display:flex; gap:8px; align-items:center; flex:0 0 auto; }
     .tmp-ip-picker { flex:0 0 auto; background:#111; color:#fff; border:1px solid rgba(255,255,255,.45); border-radius:6px; padding:3px 10px; font-size:14px; font-weight:700; cursor:pointer; }
     .tmp-ip-send { flex:1 1 auto; min-width:0; font-size:13px; font-weight:650; color:#fff; opacity:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -304,6 +304,16 @@ function promptHasRef(node) {
 
 function tagFor(fmt, number) {
   return String(fmt).startsWith("千问") ? `<image${number}>` : `<Picture ${number}>`;
+}
+
+function leadCount(node) {
+  const value = Number(widget(node, "外部图片")?.value || 0);
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(20, Math.round(value)));
+}
+
+function shownNumber(node, number) {
+  return number + leadCount(node);
 }
 
 function formatLabel(choice) {
@@ -604,18 +614,26 @@ function maybeAutoFirst(node) {
   writeLinked(node);
 }
 
-function normalizeToTokens(text) {
+function storedIndex(node, shown) {
+  const lead = node ? leadCount(node) : 0;
+  const number = Number(shown);
+  const stored = number - lead;
+  return stored >= 0 ? stored : number;
+}
+
+function normalizeToTokens(text, node) {
+  const token = (_, number) => `{{img:${storedIndex(node, number)}}}`;
   return String(text || "")
     .replace(/[＜〈]/g, "<")
     .replace(/[＞〉]/g, ">")
-    .replace(/<Picture\s*(\d+)\s*>/gi, (_, number) => `{{img:${Number(number)}}}`)
-    .replace(/<image\s*(\d+)\s*>/gi, (_, number) => `{{img:${Number(number)}}}`)
-    .replace(/@图片\s*(\d+)/g, (_, number) => `{{img:${Number(number)}}}`);
+    .replace(/<Picture\s*(\d+)\s*>/gi, token)
+    .replace(/<image\s*(\d+)\s*>/gi, token)
+    .replace(/@图片\s*(\d+)/g, token);
 }
 
 function exportTags(text, node) {
   const fmt = resolvedFormat(node);
-  return String(text || "").replace(/\{\{img:(\d+)\}\}/g, (_, number) => tagFor(fmt, Number(number)));
+  return String(text || "").replace(/\{\{img:(\d+)\}\}/g, (_, number) => tagFor(fmt, shownNumber(node, Number(number))));
 }
 
 function rangeTokens(range) {
@@ -711,28 +729,39 @@ function serializeEditor(root) {
     el.childNodes.forEach(walk);
   };
   root.childNodes.forEach(walk);
-  return normalizeToTokens(out.replace(/\u00a0/g, " ")).replace(/\n+$/g, "");
+  return normalizeToTokens(out.replace(/\u00a0/g, " "), root.__feimaoNode).replace(/\n+$/g, "");
 }
 
 function makeChip(node, number) {
   const images = readImages(node);
-  const item = images[number - 1];
+  const external = number === 0 && leadCount(node) > 0;
+  const item = number > 0 ? images[number - 1] : null;
   const chip = document.createElement("span");
   chip.className = "tmp-ip-chip";
   chip.contentEditable = "false";
   chip.dataset.index = String(number);
-  if (!item) chip.classList.add("missing");
+  if (!item && !external) chip.classList.add("missing");
   if (item) {
     const img = document.createElement("img");
     img.alt = "";
     img.src = viewUrl(item);
     chip.appendChild(img);
   }
+  if (external) {
+    const mark = document.createElement("span");
+    mark.className = "tmp-ip-chip-mark";
+    mark.textContent = "模板";
+    chip.appendChild(mark);
+  }
   const label = document.createElement("span");
   label.className = "tmp-ip-chip-label";
-  label.textContent = tagFor(resolvedFormat(node), number);
+  label.textContent = tagFor(resolvedFormat(node), shownNumber(node, number));
   chip.appendChild(label);
-  chip.title = item ? `${item.name || item.filename} → ${label.textContent}` : `第 ${number} 张还没上传`;
+  chip.title = external
+    ? `模板已接在前面 → ${label.textContent}`
+    : item
+      ? `${item.name || item.filename} → ${label.textContent}`
+      : `第 ${number} 张还没上传`;
   return chip;
 }
 
@@ -741,7 +770,7 @@ function renderEditor(node) {
   if (!editor) return;
   node.__tmpRendering = true;
   try {
-    const text = normalizeToTokens(readPrompt(node));
+    const text = normalizeToTokens(readPrompt(node), node);
     editor.replaceChildren();
     const pattern = /\{\{img:(\d+)\}\}/g;
     let last = 0;
@@ -886,7 +915,7 @@ function refreshChrome(node) {
   const fmt = resolvedFormat(node);
   setSilent(node, "送出格式", fmt);
   writeLinked(node);
-  if (node.__tmpSend) node.__tmpSend.textContent = `送出 ${tagFor(fmt, 1)}`;
+  if (node.__tmpSend) node.__tmpSend.textContent = `送出 ${tagFor(fmt, shownNumber(node, 1))}`;
   if (node.__tmpFormat) {
     const choice = widget(node, "引用格式")?.value || "自动";
     node.__tmpFormat.textContent = formatLabel(FORMATS.includes(choice) ? choice : "自动");
@@ -911,6 +940,9 @@ function refreshChrome(node) {
     } else {
       node.__tmpStatus.textContent = `已接 ${stats.prefix} 路，已上传 ${images.length} 张。再接下一路线，就可以继续上传。`;
     }
+    if (leadCount(node) > 0) {
+      node.__tmpStatus.textContent = `模板占第 1 张，上传的图从后面编号。${node.__tmpStatus.textContent}`;
+    }
   }
   if (node.__tmpAspect && document.activeElement !== node.__tmpAspect) node.__tmpAspect.value = widget(node, "宽高比")?.value || "16:9";
   if (node.__tmpMp && document.activeElement !== node.__tmpMp) node.__tmpMp.value = String(widget(node, "百万像素")?.value ?? 8);
@@ -920,10 +952,11 @@ function refreshChrome(node) {
   if (editor) {
     editor.querySelectorAll(".tmp-ip-chip").forEach((chip) => {
       const number = Number(chip.dataset.index);
-      const item = images[number - 1];
-      chip.classList.toggle("missing", !item);
+      const external = number === 0 && leadCount(node) > 0;
+      const item = number > 0 ? images[number - 1] : null;
+      chip.classList.toggle("missing", !item && !external);
       const label = chip.querySelector(".tmp-ip-chip-label");
-      if (label) label.textContent = tagFor(fmt, number);
+      if (label) label.textContent = tagFor(fmt, shownNumber(node, number));
       let img = chip.querySelector("img");
       if (item) {
         const url = viewUrl(item);
@@ -1157,7 +1190,7 @@ function showMenu(node, info) {
     .map((item, index) => ({ item, number: index + 1 }))
     .filter(({ item, number }) => {
       if (!query) return true;
-      const hay = `${item.name || ""} ${item.filename || ""} 图${number} image_${number - 1} ${tagFor(fmt, number)}`.toLowerCase();
+      const hay = `${item.name || ""} ${item.filename || ""} 图${number} image_${number - 1} ${tagFor(fmt, shownNumber(node, number))}`.toLowerCase();
       return hay.includes(query);
     });
   menu.replaceChildren();
@@ -1179,7 +1212,7 @@ function showMenu(node, info) {
     img.src = viewUrl(entry.item);
     const text = document.createElement("span");
     const strong = document.createElement("b");
-    strong.textContent = tagFor(fmt, entry.number);
+    strong.textContent = tagFor(fmt, shownNumber(node, entry.number));
     text.append(strong, document.createTextNode(`  ${entry.item.name || entry.item.filename}`));
     button.append(img, text);
     button.addEventListener("mousedown", (event) => event.preventDefault());
@@ -1381,6 +1414,7 @@ function buildUI(node) {
   bar.append(format, send);
   const editor = document.createElement("div");
   editor.className = "tmp-ip-editor";
+  editor.__feimaoNode = node;
   editor.contentEditable = "true";
   editor.spellcheck = false;
   editor.dataset.placeholder = "写提示词，输入 @ 引用下面的图";
@@ -1524,18 +1558,12 @@ function buildUI(node) {
   const dom = node.addDOMWidget("tmp_ip_ui", "tmp_ip", root, {
     serialize: false,
     hideOnZoom: false,
-    getMinHeight: () => widgetBox(node),
-    getMaxHeight: () => widgetBox(node),
   });
-  if (dom) {
-    dom.computeLayoutSize = () => {
-      const box = widgetBox(node);
-      return { minHeight: box, maxHeight: box, minWidth: 0 };
-    };
-  }
+  useDomLayout(dom, () => widgetBox(node), () => widgetBox(node));
   root.style.width = "100%";
-  root.style.height = "auto";
-  root.style.maxHeight = "none";
+  root.style.height = "100%";
+  root.style.maxHeight = "100%";
+  root.style.overflow = "auto";
   captureImages(node);
   renderEditor(node);
   renderGrid(node);
