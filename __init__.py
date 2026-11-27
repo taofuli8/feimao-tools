@@ -1,87 +1,68 @@
-"""feimao tools — independent lightweight nodes."""
+"""feimao tools — 自研节点的唯一家（权威完整版）。
 
-from .nodes_batch_prompt import NODE_CLASS_MAPPINGS as BATCH_MAP
-from .nodes_batch_prompt import NODE_DISPLAY_NAME_MAPPINGS as BATCH_NAMES
-from .nodes_model_switch import NODE_CLASS_MAPPINGS as SWITCH_MAP
-from .nodes_model_switch import NODE_DISPLAY_NAME_MAPPINGS as SWITCH_NAMES
-from .nodes_save_image import NODE_CLASS_MAPPINGS as SAVE_MAP
-from .nodes_save_image import NODE_DISPLAY_NAME_MAPPINGS as SAVE_NAMES
-from .nodes_upscale_switch import NODE_CLASS_MAPPINGS as UPSCALE_MAP
-from .nodes_upscale_switch import NODE_DISPLAY_NAME_MAPPINGS as UPSCALE_NAMES
-from .nodes_resolution import NODE_CLASS_MAPPINGS as RESOLUTION_MAP
-from .nodes_resolution import NODE_DISPLAY_NAME_MAPPINGS as RESOLUTION_NAMES
-from .nodes_model_compare import NODE_CLASS_MAPPINGS as COMPARE_MAP
-from .nodes_model_compare import NODE_DISPLAY_NAME_MAPPINGS as COMPARE_NAMES
-from .nodes_moss_box import NODE_CLASS_MAPPINGS as MOSS_BOX_MAP
-from .nodes_moss_box import NODE_DISPLAY_NAME_MAPPINGS as MOSS_BOX_NAMES
-from .nodes_image_prompt import NODE_CLASS_MAPPINGS as IMAGE_PROMPT_MAP
-from .nodes_image_prompt import NODE_DISPLAY_NAME_MAPPINGS as IMAGE_PROMPT_NAMES
-from .nodes_image_reverse import NODE_CLASS_MAPPINGS as IMAGE_REVERSE_MAP
-from .nodes_image_reverse import NODE_DISPLAY_NAME_MAPPINGS as IMAGE_REVERSE_NAMES
-from .nodes_scale import NODE_CLASS_MAPPINGS as SCALE_MAP
-from .nodes_scale import NODE_DISPLAY_NAME_MAPPINGS as SCALE_NAMES
-from .nodes_board import NODE_CLASS_MAPPINGS as BOARD_MAP
-from .nodes_board import NODE_DISPLAY_NAME_MAPPINGS as BOARD_NAMES
-from .nodes_preset_prompt import NODE_CLASS_MAPPINGS as PRESET_PROMPT_MAP
-from .nodes_preset_prompt import NODE_DISPLAY_NAME_MAPPINGS as PRESET_PROMPT_NAMES
-from .nodes_yue2 import NODE_CLASS_MAPPINGS as YUE2_MAP
-from .nodes_yue2 import NODE_DISPLAY_NAME_MAPPINGS as YUE2_NAMES
-from .nodes_cosyvoice_solo import NODE_CLASS_MAPPINGS as COSY_MAP
-from .nodes_cosyvoice_solo import NODE_DISPLAY_NAME_MAPPINGS as COSY_NAMES
-from .nodes_audio_clip import NODE_CLASS_MAPPINGS as AUDIO_CLIP_MAP
-from .nodes_audio_clip import NODE_DISPLAY_NAME_MAPPINGS as AUDIO_CLIP_NAMES
-from .speech import NODE_CLASS_MAPPINGS as SPEECH_MAP
-from .speech import NODE_DISPLAY_NAME_MAPPINGS as SPEECH_NAMES
+这里收齐全部自研节点：图像工具、YuE2 音乐创作、CosyVoice3 配音、语音/字幕
+批处理（speech）。所有分享包都必须使用这一份，禁止各带阉割版同名文件夹，
+否则安装时互相覆盖会导致节点丢失。
 
-try:
-    from .speech.media import register_routes as _speech_routes
-    from .speech.segment import register_segment_routes as _segment_routes
+每个模块都做容错导入：某模块因缺依赖加载失败时只跳过该模块并在控制台打印
+原因，绝不影响其它节点（尤其是 YuE2MusicCreate / 配音节点）注册。
+"""
 
-    _speech_routes()
-    _segment_routes()
-except Exception:
-    _speech_routes = None
+import importlib
 
+NODE_CLASS_MAPPINGS = {}
+NODE_DISPLAY_NAME_MAPPINGS = {}
+
+
+def _safe_register(module_name):
+    try:
+        mod = importlib.import_module("." + module_name, __name__)
+    except Exception as exc:  # noqa: BLE001 - 容错导入是本文件设计核心
+        print(f"[feimao_tools] 跳过 {module_name}：{exc}")
+        return
+    NODE_CLASS_MAPPINGS.update(getattr(mod, "NODE_CLASS_MAPPINGS", {}) or {})
+    NODE_DISPLAY_NAME_MAPPINGS.update(getattr(mod, "NODE_DISPLAY_NAME_MAPPINGS", {}) or {})
+
+
+# 图像 / 通用工具
+for _m in (
+    "nodes_batch_prompt",
+    "nodes_model_switch",
+    "nodes_save_image",
+    "nodes_upscale_switch",
+    "nodes_resolution",
+    "nodes_model_compare",
+    "nodes_moss_box",
+    "nodes_image_prompt",
+    "nodes_image_reverse",
+    "nodes_scale",
+    "nodes_edit_size",
+    "nodes_board",
+    "nodes_preset_prompt",
+):
+    _safe_register(_m)
+
+# 音频：YuE2 音乐 + CosyVoice3 配音
+_safe_register("nodes_yue2")
+_safe_register("nodes_cosyvoice_solo")
+_safe_register("nodes_audio_clip")
+
+# speech：批量语音 / 字幕 / 素材工具
+_safe_register("speech")
+
+# 路由注册（失败不影响节点）
 try:
     from . import routes as _routes  # noqa: F401
 except Exception:
     _routes = None
 
-NODE_CLASS_MAPPINGS = {}
-NODE_CLASS_MAPPINGS.update(BATCH_MAP)
-NODE_CLASS_MAPPINGS.update(SAVE_MAP)
-NODE_CLASS_MAPPINGS.update(SWITCH_MAP)
-NODE_CLASS_MAPPINGS.update(UPSCALE_MAP)
-NODE_CLASS_MAPPINGS.update(RESOLUTION_MAP)
-NODE_CLASS_MAPPINGS.update(COMPARE_MAP)
-NODE_CLASS_MAPPINGS.update(MOSS_BOX_MAP)
-NODE_CLASS_MAPPINGS.update(IMAGE_PROMPT_MAP)
-NODE_CLASS_MAPPINGS.update(IMAGE_REVERSE_MAP)
-NODE_CLASS_MAPPINGS.update(SCALE_MAP)
-NODE_CLASS_MAPPINGS.update(BOARD_MAP)
-NODE_CLASS_MAPPINGS.update(PRESET_PROMPT_MAP)
-NODE_CLASS_MAPPINGS.update(YUE2_MAP)
-NODE_CLASS_MAPPINGS.update(COSY_MAP)
-NODE_CLASS_MAPPINGS.update(AUDIO_CLIP_MAP)
-NODE_CLASS_MAPPINGS.update(SPEECH_MAP)
-
-NODE_DISPLAY_NAME_MAPPINGS = {}
-NODE_DISPLAY_NAME_MAPPINGS.update(BATCH_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(SAVE_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(SWITCH_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(UPSCALE_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(RESOLUTION_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(COMPARE_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(MOSS_BOX_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(IMAGE_PROMPT_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(IMAGE_REVERSE_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(SCALE_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(BOARD_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(PRESET_PROMPT_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(YUE2_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(COSY_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(AUDIO_CLIP_NAMES)
-NODE_DISPLAY_NAME_MAPPINGS.update(SPEECH_NAMES)
+try:
+    from .speech.media import register_routes as _speech_routes
+    from .speech.segment import register_segment_routes as _segment_routes
+    _speech_routes()
+    _segment_routes()
+except Exception:
+    pass
 
 WEB_DIRECTORY = "./web"
 

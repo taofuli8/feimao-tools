@@ -15,11 +15,13 @@ class feimao_tools_Scale_To_Pixels:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),
                 "upscale_method": (METHODS, {"default": "lanczos"}),
                 "megapixels": ("FLOAT", {"default": 1.0, "min": 0.01, "max": 16.0, "step": 0.01}),
                 "resolution_steps": ("INT", {"default": 32, "min": 1, "max": 256, "step": 1}),
-            }
+            },
+            "optional": {
+                "image": ("IMAGE",),
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -28,7 +30,7 @@ class feimao_tools_Scale_To_Pixels:
     CATEGORY = "feimao tools"
     DESCRIPTION = "按百万像素缩放参考图。没接到图时原样送出空值，后面的编码会跳过。"
 
-    def scale(self, image, upscale_method, megapixels, resolution_steps):
+    def scale(self, upscale_method, megapixels, resolution_steps, image=None):
         if image is None:
             return (None,)
         samples = image.movedim(-1, 1)

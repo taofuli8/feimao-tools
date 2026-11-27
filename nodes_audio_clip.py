@@ -5,9 +5,13 @@
 
 import os
 
-import av
 import folder_paths
 import torch
+
+try:
+    import av
+except Exception:  # PyAV 缺失时只让本节点不可用，不连累整个 feimao_tools 导入
+    av = None
 
 
 def _files():
@@ -28,6 +32,11 @@ def _pcm(wav):
 
 
 def _load(path):
+    if av is None:
+        raise RuntimeError(
+            "参考音裁剪节点需要 PyAV：请用 ComfyUI 的 Python 执行 "
+            "python -m pip install av 后重启，或改用原始的 Load Audio 节点。"
+        )
     with av.open(path) as container:
         if not container.streams.audio:
             raise ValueError("这个文件里没有音频。")
