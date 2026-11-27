@@ -1,3 +1,5 @@
+> **推荐关注我的 B 站主页**，更多 ComfyUI 工作流教程与插件更新都在这里：**B站：肥猫AIGC：https://space.bilibili.com/280681975**
+
 <div align="center">
 
 # feimao tools
