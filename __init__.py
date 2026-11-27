@@ -24,6 +24,23 @@ from .nodes_board import NODE_CLASS_MAPPINGS as BOARD_MAP
 from .nodes_board import NODE_DISPLAY_NAME_MAPPINGS as BOARD_NAMES
 from .nodes_preset_prompt import NODE_CLASS_MAPPINGS as PRESET_PROMPT_MAP
 from .nodes_preset_prompt import NODE_DISPLAY_NAME_MAPPINGS as PRESET_PROMPT_NAMES
+from .nodes_yue2 import NODE_CLASS_MAPPINGS as YUE2_MAP
+from .nodes_yue2 import NODE_DISPLAY_NAME_MAPPINGS as YUE2_NAMES
+from .nodes_cosyvoice_solo import NODE_CLASS_MAPPINGS as COSY_MAP
+from .nodes_cosyvoice_solo import NODE_DISPLAY_NAME_MAPPINGS as COSY_NAMES
+from .nodes_audio_clip import NODE_CLASS_MAPPINGS as AUDIO_CLIP_MAP
+from .nodes_audio_clip import NODE_DISPLAY_NAME_MAPPINGS as AUDIO_CLIP_NAMES
+from .speech import NODE_CLASS_MAPPINGS as SPEECH_MAP
+from .speech import NODE_DISPLAY_NAME_MAPPINGS as SPEECH_NAMES
+
+try:
+    from .speech.media import register_routes as _speech_routes
+    from .speech.segment import register_segment_routes as _segment_routes
+
+    _speech_routes()
+    _segment_routes()
+except Exception:
+    _speech_routes = None
 
 try:
     from . import routes as _routes  # noqa: F401
@@ -43,6 +60,10 @@ NODE_CLASS_MAPPINGS.update(IMAGE_REVERSE_MAP)
 NODE_CLASS_MAPPINGS.update(SCALE_MAP)
 NODE_CLASS_MAPPINGS.update(BOARD_MAP)
 NODE_CLASS_MAPPINGS.update(PRESET_PROMPT_MAP)
+NODE_CLASS_MAPPINGS.update(YUE2_MAP)
+NODE_CLASS_MAPPINGS.update(COSY_MAP)
+NODE_CLASS_MAPPINGS.update(AUDIO_CLIP_MAP)
+NODE_CLASS_MAPPINGS.update(SPEECH_MAP)
 
 NODE_DISPLAY_NAME_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS.update(BATCH_NAMES)
@@ -57,6 +78,10 @@ NODE_DISPLAY_NAME_MAPPINGS.update(IMAGE_REVERSE_NAMES)
 NODE_DISPLAY_NAME_MAPPINGS.update(SCALE_NAMES)
 NODE_DISPLAY_NAME_MAPPINGS.update(BOARD_NAMES)
 NODE_DISPLAY_NAME_MAPPINGS.update(PRESET_PROMPT_NAMES)
+NODE_DISPLAY_NAME_MAPPINGS.update(YUE2_NAMES)
+NODE_DISPLAY_NAME_MAPPINGS.update(COSY_NAMES)
+NODE_DISPLAY_NAME_MAPPINGS.update(AUDIO_CLIP_NAMES)
+NODE_DISPLAY_NAME_MAPPINGS.update(SPEECH_NAMES)
 
 WEB_DIRECTORY = "./web"
 
